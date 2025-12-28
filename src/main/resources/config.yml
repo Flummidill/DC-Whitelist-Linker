@@ -1,0 +1,41 @@
+# # # # # # # # # # # # # # # # # # #
+# DC-Whitelist-Linker Configuration #
+#           By Flummidill           #
+# # # # # # # # # # # # # # # # # # #
+
+# The Discord-Bot's Token
+# Must be a Discord Bot-Token
+bot-token: YOUR-BOT-TOKEN-HERE
+
+# Your Server ID
+# Must be a Discord Server-ID
+server-id: YOUR-SERVER-ID-HERE
+
+# Whitelist Role ID
+# Must be a Discord Role-ID
+whitelist-role-id: YOUR-ROLE-ID-HERE
+
+# If the Access Role is Required to Link (Default: false)
+# Must be true or false
+require-access-role: false
+
+# If the Access Role should be removed after Unlinking (Default: false)
+# Must be true or false
+remove-access-role-on-unlink: false
+
+# Access Role ID
+# Must be a Discord Role-ID
+access-role-id: YOUR-ROLE-ID-HERE
+
+# If Linking should only be Possible in a specific Channel (Default: false)
+# Must be true or false
+use-linking-channel: false
+
+# Linking Channel ID
+# Must be a Discord Channel-ID
+linking-channel-id: YOUR-CHANNEL-ID-HERE
+
+
+# The Config Version
+# Do not change this Value
+config-version: ${project.version}

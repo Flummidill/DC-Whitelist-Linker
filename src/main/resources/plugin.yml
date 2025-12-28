@@ -1,0 +1,42 @@
+name: DC-Whitelist-Linker
+main: com.flummidill.dc_whitelist_linker.DCWhitelistLinker
+version: ${project.version}
+api-version: 1.13
+commands:
+  linkdc:
+    description: Link Discord Account.
+    usage: /linkdc <code>
+    permission: dcwhitelistlinker.linkdc
+    permission-message: You do not have access to this command.
+  unlinkdc:
+    description: Unlink Discord Account.
+    usage: /unlinkdc
+    permission: dcwhitelistlinker.unlinkdc
+    permission-message: You do not have access to this command.
+  forceunlink:
+    description: Unlink another Player's Discord Account.
+    usage: /forceunlink <target> [<remove-access-role>]
+    permission: dcwhitelistlinker.forceunlink
+    permission-message: You do not have access to this command.
+permissions:
+  dcwhitelistlinker.player:
+    description: Allows use of all Player Commands
+    default: true
+    children:
+      dcwhitelistlinker.linkdc: true
+      dcwhitelistlinker.unlinkdc: true
+  dcwhitelistlinker.linkdc:
+    description: Allows use of the LinkDC Command
+    default: true
+  dcwhitelistlinker.unlinkdc:
+    description: Allows use of the UnLinkDC Command
+    default: true
+
+  dcwhitelistlinker.admin:
+    description: Allows use of Admin Commands
+    default: op
+    children:
+      dcwhitelistlinker.forceunlink: true
+  dcwhitelistlinker.forceunlink:
+    description: Allows use of the ForceUnLink Command
+    default: op

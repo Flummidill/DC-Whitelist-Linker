@@ -3,6 +3,7 @@
   
   <h1>DC-Whitelist-Linker</h1>
   <a href="https://modrinth.com/plugin/dc_whitelist_linker/versions">
+    <img src="https://img.shields.io/modrinth/v/dc_whitelist_linker?style=for-the-badge&label=Version&color=5A00FF">
     <img src="https://img.shields.io/modrinth/dt/dc_whitelist_linker?style=for-the-badge&label=Downloads&color=29A100">
   </a>
 </div>

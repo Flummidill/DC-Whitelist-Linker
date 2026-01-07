@@ -10,23 +10,31 @@
 
 ## 🎯 Features
 - **Self Whitelisting by Players**  
-They can whitelist themselves by Linking their Discord and Minecraft Accounts.
+They can whitelist themselves by Linking their Discord and Minecraft Accounts.  
 This removes the need for manual Whitelisting and can still be restricted by using an Access Role.
 
-- **Fast & Easy Account Linking**
-It only takes a few Seconds and is very Easy to do.
+####
+
+- **Fast & Easy Account Linking**  
+It only takes a few Seconds and is very Easy to do.  
 Generate a code on Discord, enter it in Minecraft, and you’re already Done.
 
+####
+
 - **Automatic Role-Based Whitelisting**  
-When an Account is Linked, the Player automatically receives the configured Whitelist Role on Discord.
+When an Account is Linked, the Player automatically receives the configured Whitelist Role on Discord.  
 This makes managing Server Access to Players very Simple.
 
+####
+
 - **Admin Account Management**  
-Admins can easily remove Linked Accounts by either Kicking the User from the Discord Server or taking away their Whitelist/Access Role.
+Admins can easily remove Linked Accounts by either Kicking the User from the Discord Server or taking away their Whitelist/Access Role.  
 This makes Moderation and Account Management Simpler and Efficient.
 
+####
+
 - **Automatic Nicknames**  
-When a Player Links their Account, their Discord Nickname is automatically Updated to their Minecraft Username every 15 Minutes.
+When a Player Links their Account, their Discord Nickname is automatically Updated to their Minecraft Username every 15 Minutes.  
 This makes Identifying Players on the Discord Server Effortless and helps with Moderation.
 
 

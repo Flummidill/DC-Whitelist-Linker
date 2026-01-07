@@ -60,9 +60,9 @@ This makes Identifying Players on the Discord Server Effortless and helps with M
 
 ### Permissions:
 ```
-dcwhitelistlinker.linkdc (Default: true)
-dcwhitelistlinker.unlinkdc (Default: true)
-dcwhitelistlinker.forceunlink (Default: false)
+dcwhitelistlinker.linkdc (Default: true) - Allow Linking a Discord-Account
+dcwhitelistlinker.unlinkdc (Default: true) - Allow UnLinking a Discord-Account
+dcwhitelistlinker.forceunlink (Default: false) - Allow Force UnLinking another User's Discord-Account
 ```
 
 ### Config:

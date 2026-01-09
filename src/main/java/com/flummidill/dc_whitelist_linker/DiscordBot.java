@@ -4,12 +4,13 @@ package com.flummidill.dc_whitelist_linker;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.audit.ActionType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberUpdateEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -89,6 +90,19 @@ public class DiscordBot extends ListenerAdapter {
                     Guild guild = jda.getGuildById(guildId);
 
                     if (guild != null) {
+                        Role whitelistRole = guild.getRoleById(whitelistRoleId);
+
+                        if (whitelistRole != null) {
+                            for (Member member : guild.getMembersWithRoles(whitelistRole)) {
+                                boolean isLinked = linkedAccounts.stream().anyMatch(account -> account[0].equals(member.getId()));
+
+                                if (!isLinked) {
+                                    plugin.getLogger().info("Cleaning Up Non-Linked Discord User: " + member.getUser().getName());
+                                    finishUnLinking(member.getId());
+                                }
+                            }
+                        }
+
                         for (Object[] account : linkedAccounts) {
                             String dcUUID = (String) account[0];
                             String dcName = (String) account[1];
@@ -98,7 +112,7 @@ public class DiscordBot extends ListenerAdapter {
                             Member member = guild.getMemberById(dcUUID);
 
                             if (member == null || member.getRoles().stream().noneMatch(r -> r.getId().equals(whitelistRoleId)) || (accessRoleRequired && member.getRoles().stream().noneMatch(r -> r.getId().equals(accessRoleId)))) {
-                                plugin.getLogger().info("Auto Unlinking User!\n       DC-Name: " + dcName + " | MC-Name: " + mcName);
+                                plugin.getLogger().info("Auto Unlinking Discord User: " + dcName);
                                 manager.startUnLinking(dcUUID, mcUUID);
                                 continue;
                             }
@@ -217,32 +231,46 @@ public class DiscordBot extends ListenerAdapter {
     }
 
     @Override
-    public void onGuildMemberRoleRemove(GuildMemberRoleRemoveEvent event) {
+    public void onGuildMemberUpdate(GuildMemberUpdateEvent event) {
         if (event.getGuild().getId().equals(guildId)) {
-            if (event.getRoles().stream().anyMatch(role -> role.getId().equals(whitelistRoleId)) || (accessRoleRequired && event.getRoles().stream().anyMatch(role -> role.getId().equals(accessRoleId)))) {
-                String dcUUID = event.getUser().getId();
-                String dcName = event.getUser().getName();
-                String mcUUID = manager.getMinecraftUUID(dcUUID);
-                String mcName = manager.getMinecraftName(dcUUID);
+            String userId = event.getUser().getId();
+            String userName = event.getUser().getName();
 
-                if (mcUUID != null && mcName != null && !mcUUID.equals("ERROR")) {
-                    plugin.getLogger().info("Auto Unlinking User!\n       DC-Name: " + dcName + " | MC-Name: " + mcName);
-                    manager.startUnLinking(dcUUID, mcUUID);
-                } else {
-                    plugin.getLogger().info("Failed to Auto Unlink User \"" + dcName + "\": Minecraft Account Data Unavailable.");
-                }
-            }
+            event.getGuild().retrieveAuditLogs()
+                    .type(ActionType.MEMBER_ROLE_UPDATE)
+                    .limit(1)
+                    .queue(logs -> {
+                        if (!logs.isEmpty()) {
+                            var entry = logs.get(0);
+                            if (entry.getUser() != null &&
+                                    entry.getUser().getId().equals(event.getJDA().getSelfUser().getId())) {
+                                return;
+                            }
+                        }
+
+                        event.getGuild().retrieveMemberById(userId).queue(member -> {
+                            boolean hasAccessRole = member.getRoles().stream()
+                                    .anyMatch(r -> r.getId().equals(accessRoleId));
+
+                            boolean hasMemberRole = member.getRoles().stream()
+                                    .anyMatch(r -> r.getId().equals(whitelistRoleId));
+
+                            if (!hasAccessRole || !hasMemberRole) {
+                                String mcUUID = manager.getMinecraftUUID(userId);
+                                if (mcUUID != null && !mcUUID.equals("ERROR")) {
+                                    plugin.getLogger().info("Auto Unlinking Discord User: " + userName);
+                                    manager.startUnLinking(userId, mcUUID);
+                                }
+                            }
+                        });
+                    });
         }
     }
 
     @Override
     public void onGuildMemberRemove(GuildMemberRemoveEvent event) {
         if (event.getGuild().getId().equals(guildId)) {
-            Member member = event.getMember();
-
-            if (member != null) {
-                manager.unLinkRemovedMember(member.getId());
-            }
+            manager.unLinkRemovedMember(event.getUser().getId());
         }
     }
 
@@ -291,8 +319,6 @@ public class DiscordBot extends ListenerAdapter {
                         if (botRoleHighEnoughToManage(guild, member)) {
                             guild.removeRoleFromMember(member, role).queue();
                             guild.modifyNickname(member, null).queue();
-
-                            removeAccessRole(member);
                         } else {
                             plugin.getLogger().info("UnLinking Error: Bot's Highest Role is not Higher than Linked Member's Highest Role!");
                         }
@@ -346,28 +372,6 @@ public class DiscordBot extends ListenerAdapter {
         }
 
         return false;
-    }
-
-    public void removeAccessRole(Member member) {
-        if (removeAccessRoleOnUnlink) {
-            Guild guild = jda.getGuildById(guildId);
-
-            if (guild != null) {
-                Role role = guild.getRoleById(accessRoleId);
-
-                if (role != null) {
-                    if (member != null) {
-                        guild.removeRoleFromMember(member, role).queue();
-                    } else {
-                        plugin.getLogger().info("Error: Member not Found.");
-                    }
-                } else {
-                    plugin.getLogger().info("Error: Access Role not Found.");
-                }
-            } else {
-                plugin.getLogger().info("Error: Guild not Found.");
-            }
-        }
     }
 
     public void stopBot() {

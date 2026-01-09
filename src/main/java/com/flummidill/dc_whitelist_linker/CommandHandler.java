@@ -92,7 +92,9 @@ public class CommandHandler implements CommandExecutor {
                                 manager.startUnLinking(dcUUID, mcUUID);
 
                                 if (args.length == 2) {
-                                    manager.dcBot.removeAccessRole(dcUUID);
+                                    if (args[1].equals("true")) {
+                                        manager.dcBot.removeAccessRole(dcUUID);
+                                    }
                                 }
                             } else {
                                 sender.sendMessage("§c" + args[0] + " does not have a linked Discord-Account.");

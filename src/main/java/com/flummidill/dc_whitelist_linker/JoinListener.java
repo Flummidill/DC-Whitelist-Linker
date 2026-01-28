@@ -15,15 +15,13 @@ public class JoinListener implements Listener {
 
     private final DCWhitelistLinker plugin;
     private final WhitelistManager manager;
-    private final PlayerFreezer freezer;
 
     private boolean sendUpdateNotification = false;
 
 
-    public JoinListener(DCWhitelistLinker plugin, WhitelistManager manager, PlayerFreezer playerFreezer) {
+    public JoinListener(DCWhitelistLinker plugin, WhitelistManager manager) {
         this.plugin = plugin;
         this.manager = manager;
-        this.freezer = playerFreezer;
     }
 
     public void setUpdateAvailable(boolean updateAvailable) {
@@ -87,11 +85,6 @@ public class JoinListener implements Listener {
             message2.addExtra(Text2);
 
             player.spigot().sendMessage(message2);
-        }
-
-        if (!manager.linkedDiscordAccountExists(event.getPlayer().getUniqueId().toString())) {
-            event.getPlayer().teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
-            freezer.freezePlayer(event.getPlayer().getUniqueId());
         }
     }
 }

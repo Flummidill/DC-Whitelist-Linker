@@ -53,13 +53,11 @@ public class WhitelistManager {
         try (Statement stmt = connection.createStatement()) {
             // Linking-Process Table
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS linking_process (" +
-                    "dc_uuid TEXT NOT NULL," +
-                    "dc_name TEXT NOT NULL," +
                     "mc_uuid TEXT NOT NULL," +
                     "mc_name TEXT NOT NULL," +
                     "auth_code TEXT NOT NULL," +
                     "expiry_time LONG NOT NULL," +
-                    "PRIMARY KEY(dc_uuid))");
+                    "PRIMARY KEY(mc_uuid))");
 
             // Linked-Accounts Table
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS linked_accounts (" +
@@ -82,15 +80,13 @@ public class WhitelistManager {
         }
     }
 
-    public void startLinking(String dcUUID, String dcName, String authCode, Long expiryTime) {
+    public void startLinking(String mcUUID, String mcName, String authCode, Long expiryTime) {
         try (PreparedStatement ps = connection.prepareStatement(
-                "REPLACE INTO linking_process(dc_uuid, dc_name, mc_uuid, mc_name, auth_code, expiry_time) VALUES (?, ?, ?, ?, ?, ?)")) {
-            ps.setString(1, dcUUID);
-            ps.setString(2, dcName);
-            ps.setString(3, "?");
-            ps.setString(4, "?");
-            ps.setString(5, authCode);
-            ps.setLong(6, expiryTime);
+                "REPLACE INTO linking_process(mc_uuid, mc_name, auth_code, expiry_time) VALUES (?, ?, ?, ?, ?, ?)")) {
+            ps.setString(1, mcUUID);
+            ps.setString(2, mcName);
+            ps.setString(3, authCode);
+            ps.setLong(4, expiryTime);
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -128,8 +124,8 @@ public class WhitelistManager {
             ps.setString(1, authCode);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                String dcUUID = rs.getString("dc_uuid");
-                String dcName = rs.getString("dc_name");
+                String mcUUID = rs.getString("mc_uuid");
+                String mcName = rs.getString("mc_name");
 
                 PreparedStatement ps2 = connection.prepareStatement(
                         "REPLACE INTO linked_accounts(dc_uuid, dc_name, mc_uuid, mc_name) VALUES (?, ?, ?, ?)");
@@ -144,8 +140,7 @@ public class WhitelistManager {
                 ps3.setString(1, authCode);
                 ps3.executeUpdate();
 
-                dcBot.finishLinking(dcUUID, mcName);
-                freezer.unfreezePlayer(mcUUID);
+                dcBot.finishLinking(mcName, dcUUID);
 
                 return true;
             }

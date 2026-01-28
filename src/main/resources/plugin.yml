@@ -3,11 +3,6 @@ main: com.flummidill.dc_whitelist_linker.DCWhitelistLinker
 version: ${project.version}
 api-version: 1.13
 commands:
-  linkdc:
-    description: Link Discord Account.
-    usage: /linkdc <code>
-    permission: dcwhitelistlinker.linkdc
-    permission-message: You do not have access to this command.
   unlinkdc:
     description: Unlink Discord Account.
     usage: /unlinkdc

@@ -28,8 +28,6 @@ public class TabCompleter implements org.bukkit.command.TabCompleter {
         Player player = (Player) sender;
 
         switch (command.getName()) {
-            case "linkdc":
-                return List.of("<Auth-Code>");
             case "unlinkdc":
                 return Collections.emptyList();
             case "forceunlink":

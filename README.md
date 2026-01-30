@@ -44,13 +44,12 @@ This makes Identifying Players on the Discord Server Effortless and helps with M
 
 ### DC-Commands:
 ```
-/linkmc - Get your Linking/Auth Code
+/linkmc <Auth-Code> - Link your Minecraft Account
 /unlinkmc - Unlink your Minecraft Account
 ```
 
 ### MC-Commands:
 ```
-/linkdc <Auth-Code> - Link your Discord Account
 /unlinkdc - Unlink your Discord Account
 ```
 

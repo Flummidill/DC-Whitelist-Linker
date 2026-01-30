@@ -16,7 +16,6 @@ import java.util.concurrent.Executor;
 public class WhitelistManager {
 
     private final DCWhitelistLinker plugin;
-    private final PlayerFreezer freezer;
 
     public final DiscordBot dcBot;
     public final Executor dbWorker;
@@ -24,11 +23,10 @@ public class WhitelistManager {
     private final File dbFile;
     private Connection connection;
 
-    public WhitelistManager(DCWhitelistLinker plugin, DatabaseWorker dbWorker, DiscordBot dcBot, PlayerFreezer playerFreezer) {
+    public WhitelistManager(DCWhitelistLinker plugin, DatabaseWorker dbWorker, DiscordBot dcBot) {
         this.plugin = plugin;
         this.dbWorker = query -> dbWorker.getDatabaseExecutor().execute(query);
         this.dcBot = dcBot;
-        this.freezer = playerFreezer;
         this.dbFile = new File(plugin.getDataFolder(), "users.db");
         openConnection();
         createTables();
@@ -53,6 +51,8 @@ public class WhitelistManager {
         try (Statement stmt = connection.createStatement()) {
             // Linking-Process Table
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS linking_process (" +
+                    "dc_uuid TEXT NOT NULL," +
+                    "dc_name TEXT NOT NULL," +
                     "mc_uuid TEXT NOT NULL," +
                     "mc_name TEXT NOT NULL," +
                     "auth_code TEXT NOT NULL," +
@@ -82,15 +82,33 @@ public class WhitelistManager {
 
     public void startLinking(String mcUUID, String mcName, String authCode, Long expiryTime) {
         try (PreparedStatement ps = connection.prepareStatement(
-                "REPLACE INTO linking_process(mc_uuid, mc_name, auth_code, expiry_time) VALUES (?, ?, ?, ?, ?, ?)")) {
-            ps.setString(1, mcUUID);
-            ps.setString(2, mcName);
-            ps.setString(3, authCode);
-            ps.setLong(4, expiryTime);
+                "REPLACE INTO linking_process(dc_uuid, dc_name, mc_uuid, mc_name, auth_code, expiry_time) VALUES (?, ?, ?, ?, ?, ?)")) {
+            ps.setString(1, "?");
+            ps.setString(2, "?");
+            ps.setString(3, mcUUID);
+            ps.setString(4, mcName);
+            ps.setString(5, authCode);
+            ps.setLong(6, expiryTime);
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getExistingAuthCode(String mcUUID) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT auth_code FROM linking_process WHERE mc_uuid = ? LIMIT 1")) {
+            ps.setString(1, mcUUID);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("auth_code");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "ERROR";
+        }
+
+        return "ERROR";
     }
 
     public boolean authCodeValid(String authCode) {
@@ -118,7 +136,7 @@ public class WhitelistManager {
         });
     }
 
-    public boolean finishLinking(String authCode, UUID mcUUID, String mcName) {
+    public boolean finishLinking(String authCode, String dcUUID, String dcName) {
         try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT * FROM linking_process WHERE auth_code = ? LIMIT 1")) {
             ps.setString(1, authCode);
@@ -131,7 +149,7 @@ public class WhitelistManager {
                         "REPLACE INTO linked_accounts(dc_uuid, dc_name, mc_uuid, mc_name) VALUES (?, ?, ?, ?)");
                 ps2.setString(1, dcUUID);
                 ps2.setString(2, dcName);
-                ps2.setString(3, mcUUID.toString());
+                ps2.setString(3, mcUUID);
                 ps2.setString(4, mcName);
                 ps2.executeUpdate();
 
@@ -140,7 +158,7 @@ public class WhitelistManager {
                 ps3.setString(1, authCode);
                 ps3.executeUpdate();
 
-                dcBot.finishLinking(mcName, dcUUID);
+                dcBot.finishLinking(dcUUID, dcName);
 
                 return true;
             }
@@ -192,7 +210,20 @@ public class WhitelistManager {
 
 
 
-    public CompletableFuture<List<Object[]>> getAllLinkedAccountNamesAsync() {
+    public void updateMinecraftName(String mcUUID, String mcName) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE linked_accounts SET mc_name = ? WHERE mc_uuid = ?")) {
+            ps.setString(1, mcName);
+            ps.setString(2, mcUUID);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    public CompletableFuture<List<Object[]>> getAllLinkedAccountsAsync() {
         CompletableFuture<List<Object[]>> future = new CompletableFuture<>();
 
         dbWorker.execute(() -> {
@@ -293,6 +324,20 @@ public class WhitelistManager {
     }
 
 
+    public boolean isLinking(String mcUUID) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT 1 FROM linking_process WHERE mc_uuid = ? LIMIT 1")) {
+            ps.setString(1, mcUUID);
+            ResultSet rs = ps.executeQuery();
+
+            return rs.next();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
     public boolean linkedMinecraftAccountExists(String dcUUID) {
         try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT 1 FROM linked_accounts WHERE dc_uuid = ? LIMIT 1")) {
@@ -359,7 +404,7 @@ public class WhitelistManager {
                 ps.setString(1, mcUUID.toString());
                 ResultSet rs = ps.executeQuery();
                 if (rs.next()) {
-                    discordName = rs.getString("mc_name");
+                    discordName = rs.getString("dc_name");
                 }
             } catch (SQLException e) {
                 e.printStackTrace();

@@ -23,8 +23,6 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
-import java.security.SecureRandom;
-import java.time.Instant;
 
 
 public class DiscordBot extends ListenerAdapter {
@@ -65,7 +63,8 @@ public class DiscordBot extends ListenerAdapter {
                     .build();
 
             jda.updateCommands().addCommands(
-                    Commands.slash("linkmc", "Link your Minecraft-Account to your Discord-Account."),
+                    Commands.slash("linkmc", "Link your Minecraft-Account to your Discord-Account.")
+                            .addOption(OptionType.STRING, "auth_code", "Your Auth-Code from Minecraft.", true),
                     Commands.slash("unlinkmc", "Unlink your Minecraft-Account from your Discord-Account."),
                     Commands.slash("forceunlink", "Unlink another Player's Minecraft-Account from their Discord-Account.")
                             .addOption(OptionType.USER, "target", "The Player to UnLink.", true)
@@ -86,7 +85,7 @@ public class DiscordBot extends ListenerAdapter {
     public void UpdateAllMembersTask() {
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             manager.dbWorker.execute(() -> {
-                manager.getAllLinkedAccountNamesAsync().thenAccept(linkedAccounts -> {
+                manager.getAllLinkedAccountsAsync().thenAccept(linkedAccounts -> {
                     Guild guild = jda.getGuildById(guildId);
 
                     if (guild != null) {
@@ -142,30 +141,39 @@ public class DiscordBot extends ListenerAdapter {
 
                 switch (event.getName()) {
                     case "linkmc":
-                        if (accessRoleRequired) {
-                            Member member = event.getMember();
-                            if (member != null) {
-                                if (member.getRoles().stream().noneMatch(role -> role.getId().equals(accessRoleId))) {
-                                    event.reply("The <@&" + accessRoleId + "> Role is required to Link your Account!").setEphemeral(true).queue();
+                        String authCode = event.getOption("auth_code", OptionMapping::getAsString);
+
+                        if (authCode != null) {
+                            if (accessRoleRequired) {
+                                Member member = event.getMember();
+                                if (member != null) {
+                                    if (member.getRoles().stream().noneMatch(role -> role.getId().equals(accessRoleId))) {
+                                        event.reply("The <@&" + accessRoleId + "> Role is required to Link your Account!").setEphemeral(true).queue();
+                                        return;
+                                    }
+                                } else {
+                                    event.reply("Failed to get your User Data! Please try Again.").setEphemeral(true).queue();
                                     return;
                                 }
-                            } else {
-                                event.reply("Failed to get your User Data! Please try Again.").setEphemeral(true).queue();
-                                return;
                             }
-                        }
 
-                        String mcName = manager.getMinecraftName(event.getUser().getId());
+                            String mcName = manager.getMinecraftName(event.getUser().getId());
 
-                        if (mcName.equals("ERROR")) {
-                            String authCode = genAuthCode();
-                            Long expiryTime = Instant.now().plusSeconds(300).getEpochSecond();
-
-                            manager.startLinking(event.getUser().getId(), event.getUser().getName(), authCode, expiryTime);
-
-                            event.reply("To Link your Account, run `/linkdc " + authCode + "` in Minecraft.\nExpiry: <t:" + expiryTime + ":R>").setEphemeral(true).queue();
+                            if (mcName.equals("ERROR")) {
+                                if (manager.authCodeValid(authCode)) {
+                                    if (manager.finishLinking(authCode, event.getUser().getId(), event.getUser().getName())) {
+                                        event.reply("Successfully linked your Minecraft-Account!").setEphemeral(true).queue();
+                                    } else {
+                                        event.reply("Failed to Link your Minecraft-Account!").setEphemeral(true).queue();
+                                    }
+                                } else {
+                                    event.reply("Invalid or Expired Auth-Code!").setEphemeral(true).queue();
+                                }
+                            } else {
+                                event.reply("You already have a linked Minecraft-Account!").setEphemeral(true).queue();
+                            }
                         } else {
-                            event.reply("You already have a linked Minecraft-Account: " + mcName).setEphemeral(true).queue();
+                            event.reply("Please enter a Valid Auth-Code!").setEphemeral(true).queue();
                         }
 
                         break;
@@ -214,20 +222,6 @@ public class DiscordBot extends ListenerAdapter {
                 }
             }
         }
-    }
-
-    public static String genAuthCode() {
-        String codeChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        SecureRandom randomVal = new SecureRandom();
-
-        StringBuilder authCode = new StringBuilder(6);
-
-        for (int i = 0; i < 6; i++) {
-            int index = randomVal.nextInt(codeChars.length());
-            authCode.append(codeChars.charAt(index));
-        }
-
-        return authCode.toString();
     }
 
     @Override

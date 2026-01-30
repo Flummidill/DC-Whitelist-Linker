@@ -21,8 +21,8 @@ public class DCWhitelistLinker extends JavaPlugin {
     private DatabaseWorker dbWorker;
     private DiscordBot dcBot;
 
+    private LoginListener loginListener;
     private JoinListener joinListener;
-    private PlayerFreezer playerFreezer;
 
 
     @Override
@@ -37,14 +37,9 @@ public class DCWhitelistLinker extends JavaPlugin {
         getLogger().info("Initializing Database-Worker...");
         dbWorker = new DatabaseWorker();
 
-        // Initialize Player-Freezer
-        getLogger().info("Initializing Player-Freezer...");
-        playerFreezer = new PlayerFreezer(this);
-        getServer().getPluginManager().registerEvents(playerFreezer, this);
-
         // Initialize Whitelist-Manager
         getLogger().info("Initializing Whitelist-Manager...");
-        manager = new WhitelistManager(this, dbWorker, dcBot, playerFreezer);
+        manager = new WhitelistManager(this, dbWorker, dcBot);
 
         // Initialize Event Listeners
         getLogger().info("Initializing Event Listeners...");
@@ -74,19 +69,21 @@ public class DCWhitelistLinker extends JavaPlugin {
 
 
     public void initializeEventListeners() {
-        joinListener = new JoinListener(this, manager, playerFreezer);
+        loginListener = new LoginListener(this, manager);
+        getServer().getPluginManager().registerEvents(loginListener, this);
+        joinListener = new JoinListener(this, manager);
         getServer().getPluginManager().registerEvents(joinListener, this);
     }
 
     private void loadConfig() {
-        String botToken = getConfig().getString("bot-token", null);
-        String serverId = getConfig().getString("server-id", null);
-        String whitelistRoleId = getConfig().getString("whitelist-role-id", null);
+        String botToken = getConfig().getString("bot-token", "YOUR-BOT-TOKEN-HERE");
+        String serverId = getConfig().getString("server-id", "YOUR-SERVER-ID-HERE");
+        String whitelistRoleId = getConfig().getString("whitelist-role-id", "YOUR-ROLE-ID-HERE");
         boolean requireAccessRole = getConfig().getBoolean("require-access-role", false);
         boolean removeAccessRoleOnUnlink = getConfig().getBoolean("remove-access-role-on-unlink", false);
-        String accessRoleId = getConfig().getString("access-role-id", null);
+        String accessRoleId = getConfig().getString("access-role-id", "YOUR-ROLE-ID-HERE");
         boolean useLinkingChannel = getConfig().getBoolean("use-linking-channel", false);
-        String linkingChannelId = getConfig().getString("linking-channel-id", null);
+        String linkingChannelId = getConfig().getString("linking-channel-id", "YOUR-CHANNEL-ID-HERE");
 
         String configVersion = getConfig().getString("config-version", "1.0.0");
         String currentVersion = getDescription().getVersion();
@@ -139,11 +136,9 @@ public class DCWhitelistLinker extends JavaPlugin {
         CommandHandler commandHandler = new CommandHandler(this, this.manager);
         TabCompleter tabCompleter = new TabCompleter(this, this.manager);
 
-        getCommand("linkdc").setExecutor(commandHandler);
         getCommand("unlinkdc").setExecutor(commandHandler);
         getCommand("forceunlink").setExecutor(commandHandler);
 
-        getCommand("linkdc").setTabCompleter(tabCompleter);
         getCommand("unlinkdc").setTabCompleter(tabCompleter);
         getCommand("forceunlink").setTabCompleter(tabCompleter);
     }

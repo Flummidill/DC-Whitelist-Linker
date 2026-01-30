@@ -86,5 +86,9 @@ public class JoinListener implements Listener {
 
             player.spigot().sendMessage(message2);
         }
+
+        if (!manager.getMinecraftNameFromUUID(player.getUniqueId()).equals("ERROR")) {
+            manager.updateMinecraftName(player.getUniqueId().toString(), player.getName());
+        }
     }
 }

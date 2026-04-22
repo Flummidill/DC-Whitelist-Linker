@@ -1,7 +1,6 @@
-package com.flummidill.dc_whitelist_linker;
+package com.pixelcatt.dc_whitelist_linker;
 
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -80,7 +79,7 @@ public class JoinListener implements Listener {
             Text2.setUnderlined(true);
             Text2.setClickEvent(new ClickEvent(
                 ClickEvent.Action.OPEN_URL,
-                "https://github.com/Flummidill/DC-Whitelist-Linker/releases/latest"
+                "https://modrinth.com/plugin/dc_whitelist_linker/versions"
             ));
             message2.addExtra(Text2);
 

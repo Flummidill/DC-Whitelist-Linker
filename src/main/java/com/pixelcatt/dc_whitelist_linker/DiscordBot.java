@@ -1,4 +1,4 @@
-package com.flummidill.dc_whitelist_linker;
+package com.pixelcatt.dc_whitelist_linker;
 
 
 import net.dv8tion.jda.api.JDA;

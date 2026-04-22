@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/Flummidill/DC-Whitelist-Linker/blob/HEAD/icons/DC-Whitelist-Linker-250x250.png?raw=true" alt="DC-Whitelist-Linker-Icon">
+  <img src="https://github.com/PixelCattt/DC-Whitelist-Linker/blob/HEAD/icons/DC-Whitelist-Linker-250x250.png?raw=true" alt="DC-Whitelist-Linker-Icon">
   
   <h1>DC-Whitelist-Linker</h1>
   <a href="https://modrinth.com/plugin/dc_whitelist_linker/versions">

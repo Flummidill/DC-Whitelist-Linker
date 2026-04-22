@@ -1,4 +1,4 @@
-package com.flummidill.dc_whitelist_linker;
+package com.pixelcatt.dc_whitelist_linker;
 
 
 import org.bukkit.configuration.file.FileConfiguration;
@@ -27,7 +27,7 @@ public class DCWhitelistLinker extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getLogger().info("~ Created by Flummidill ~");
+        getLogger().info("~ Created by PixelCatt ~");
 
         // Initialize Discord-Bot
         getLogger().info("Initializing Discord-Bot...");

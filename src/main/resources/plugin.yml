@@ -1,7 +1,7 @@
 name: DC-Whitelist-Linker
-main: com.flummidill.dc_whitelist_linker.DCWhitelistLinker
+main: com.pixelcatt.dc_whitelist_linker.DCWhitelistLinker
 version: ${project.version}
-api-version: 1.13
+api-version: 1.21
 commands:
   unlinkdc:
     description: Unlink Discord Account.
